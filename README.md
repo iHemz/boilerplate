@@ -18,7 +18,7 @@ Testing Library, Playwright, ESLint, Prettier, Stylelint.
 structured JSON logging in production, pytest, ruff (lint + format), and a non-root
 Dockerfile.
 
-**Model providers** — one client for Claude and Grok behind a shared protocol, with
+**Model providers** — one client for Claude, Groq, and xAI behind a shared protocol, with
 retries, schema-enforced structured output on both, usage/cost logging, and **narrow**
 failover: only an unusable provider (exhausted credit, rejected key, hard capacity) advances
 the chain, so a malformed request fails loudly on one account instead of billing two. The
