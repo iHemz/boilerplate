@@ -15,8 +15,14 @@ Testing Library, Playwright, ESLint, Prettier, Stylelint.
 
 **Backend** — FastAPI on Python 3.12 with `uv`, a one-directional layered architecture
 (route → service → domain → repository), typed settings, centralised error mapping,
-structured JSON logging in production, a shared Claude client with retries and
-schema-enforced structured output, pytest, ruff (lint + format), and a non-root Dockerfile.
+structured JSON logging in production, pytest, ruff (lint + format), and a non-root
+Dockerfile.
+
+**Model providers** — one client for Claude and Grok behind a shared protocol, with
+retries, schema-enforced structured output on both, usage/cost logging, and **narrow**
+failover: only an unusable provider (exhausted credit, rejected key, hard capacity) advances
+the chain, so a malformed request fails loudly on one account instead of billing two. The
+test suite has an autouse guard that fails any test which reaches for a real client.
 
 **Repo** — pre-commit hook (lint-staged, tsc, naming conventions, ruff), GitHub Actions CI
 with path filters so docs-only changes skip the matrix, `.editorconfig`, and a `.claude/`
@@ -68,8 +74,11 @@ The full set is in [`CLAUDE.md`](CLAUDE.md). The load-bearing ones:
   implementation. Swapping in-memory for Postgres is one new class and one line in `deps.py`.
 - **Routes have no try/except.** Services raise `core.errors` exceptions;
   `api/error_handlers.py` maps them to status codes once.
-- **Every Claude call goes through `core/llm.py`.** Use `parse()` with a Pydantic schema
-  when you need structured data — the API enforces it, so there's no JSON to repair.
+- **Every model call goes through `core/llm.py`.** Use `parse()` with a Pydantic schema
+  when you need structured data — the provider enforces it, so there's no JSON to repair.
+  `core/providers.py` is the only module allowed to import a provider SDK.
+- **Failover stays narrow.** Widening it past `ProviderUnavailable` re-runs bugs on a
+  second account and hides them behind the fallback's answer.
 
 ## Commands
 
